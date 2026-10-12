@@ -66,7 +66,8 @@ export function normalizeOptions(
     combinedPluginAndMaybeExecutorOptions,
     Object.fromEntries(
       Object.entries(executorOptions ?? {}).filter(
-        ([, value]) => value !== undefined
+        ([key, value]) =>
+          value !== undefined && !isExecutorSchemaDefault(key, value)
       )
     )
   );
@@ -220,6 +221,13 @@ function normalizeRelativePaths(
       }
     }
   }
+}
+
+// Executors receive options with schema defaults already applied. Those defaults
+// must not override the plugin's own options; target options still apply above.
+function isExecutorSchemaDefault(key: string, value: unknown): boolean {
+  const schema = require('../../../executors/webpack/schema.json');
+  return schema.properties[key]?.default === value;
 }
 
 function isRelativePath(val: unknown): boolean {

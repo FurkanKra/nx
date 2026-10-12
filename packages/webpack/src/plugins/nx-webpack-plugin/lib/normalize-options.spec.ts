@@ -72,6 +72,31 @@ describe('native webpack plugin executor options', () => {
     expect(result.outputFileName).toBe('custom.js');
   });
 
+  it('keeps plugin options over executor schema defaults', () => {
+    const pluginOptions = {
+      outputFileName: 'server.js',
+      buildLibsFromSource: false,
+    };
+    const defaulted = webpackExecutorContext.run(
+      {
+        options: { outputFileName: 'main.js', buildLibsFromSource: true },
+        target: { project: 'app', target: 'build' },
+      },
+      () => normalizeOptions({ ...pluginOptions })
+    );
+    expect(defaulted.outputFileName).toBe('server.js');
+    expect(defaulted.buildLibsFromSource).toBe(false);
+
+    const overridden = webpackExecutorContext.run(
+      {
+        options: { outputFileName: 'cli.js', buildLibsFromSource: true },
+        target: { project: 'app', target: 'build' },
+      },
+      () => normalizeOptions({ ...pluginOptions })
+    );
+    expect(overridden.outputFileName).toBe('cli.js');
+  });
+
   it('isolates overrides while configs load concurrently', async () => {
     const results = await Promise.all([
       webpackExecutorContext.run(
