@@ -28,7 +28,11 @@ export interface AsyncNxComposableWebpackPlugin {
   ): Configuration | Promise<Configuration>;
 }
 
-/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
+// TODO(v25): remove the inert config-helper stubs in this file.
+/**
+ * @deprecated Use `NxAppWebpackPlugin` from `@nx/webpack/app-plugin`.
+ * This inert stub will be removed in Nx v25.
+ */
 export function composePlugins(
   ..._plugins: (
     | NxComposableWebpackPlugin
@@ -49,7 +53,10 @@ export function composePlugins(
   );
 }
 
-/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
+/**
+ * @deprecated Use `NxAppWebpackPlugin` from `@nx/webpack/app-plugin`.
+ * This inert stub will be removed in Nx v25.
+ */
 export function composePluginsSync(..._plugins: NxComposableWebpackPlugin[]) {
   warnWebpackComposeHelpersDeprecation();
   return Object.assign(

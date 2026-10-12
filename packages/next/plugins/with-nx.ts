@@ -15,7 +15,12 @@ export interface WithNxContext {
   libsDir: string;
 }
 
-/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
+// TODO(v25): remove the inert config-helper stubs in this file.
+/**
+ * @deprecated Export the Next.js config directly and compose
+ * any other wrappers yourself.
+ * This inert stub will be removed in Nx v25.
+ */
 function withNx(
   config: WithNxOptions = {},
   _context?: WithNxContext
@@ -40,7 +45,10 @@ function withNx(
   };
 }
 
-/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
+/**
+ * @deprecated Use the Next.js config object directly.
+ * This inert stub will be removed in Nx v25.
+ */
 export function getNextConfig(
   nextConfig: WithNxOptions = {},
   _context?: WithNxContext
@@ -48,7 +56,10 @@ export function getNextConfig(
   return nextConfig;
 }
 
-/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
+/**
+ * @deprecated Next.js resolves tsconfig `paths` natively.
+ * This inert stub will be removed in Nx v25.
+ */
 export function getAliasForProject(
   _node: unknown,
   _paths: Record<string, string[]>

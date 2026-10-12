@@ -5,7 +5,11 @@ import type { WithWebOptions } from './with-web';
 
 export interface WithReactOptions extends WithWebOptions {}
 
-/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
+// TODO(v25): remove the inert config-helper stubs in this file.
+/**
+ * @deprecated Use `NxReactRspackPlugin` from `@nx/rspack/react-plugin`.
+ * This inert stub will be removed in Nx v25.
+ */
 export function withReact(
   _options: WithReactOptions = {}
 ): NxComposableRspackPlugin {

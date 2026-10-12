@@ -38,7 +38,12 @@ export interface nxViteTsPathsOptions {
   testTarget?: string;
 }
 
-/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
+// TODO(v25): remove the inert config-helper stubs in this file.
+/**
+ * @deprecated Use Vite's `resolve.tsconfigPaths` (Vite 8+) or
+ * `tsconfigPaths()` from `vite-tsconfig-paths`.
+ * This inert stub will be removed in Nx v25.
+ */
 export function nxViteTsPaths(_options: nxViteTsPathsOptions = {}): Plugin {
   warnNxViteTsPathsDeprecation();
   return { name: 'nx-vite-ts-paths' };

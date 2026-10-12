@@ -5,7 +5,11 @@ import type { NxAppWebpackPluginOptions } from '../plugins/nx-webpack-plugin/nx-
 
 export type WithNxOptions = Partial<NxAppWebpackPluginOptions>;
 
-/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
+// TODO(v25): remove the inert config-helper stubs in this file.
+/**
+ * @deprecated Use `NxAppWebpackPlugin` from `@nx/webpack/app-plugin`.
+ * This inert stub will be removed in Nx v25.
+ */
 export function withNx(
   _options: WithNxOptions = {}
 ): NxComposableWebpackPlugin {

@@ -5,7 +5,12 @@ import type {
   NextPluginThatReturnsConfigFn,
 } from './config';
 
-/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
+// TODO(v25): remove the inert config-helper stubs in this file.
+/**
+ * @deprecated Export the Next.js config directly and compose
+ * any other wrappers yourself.
+ * This inert stub will be removed in Nx v25.
+ */
 export function composePlugins(
   ..._plugins: (NextPlugin | NextPluginThatReturnsConfigFn)[]
 ): (baseConfig: NextConfig) => NextConfigFn {

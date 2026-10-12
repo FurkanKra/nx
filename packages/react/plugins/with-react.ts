@@ -4,7 +4,11 @@ import { warnReactWithReactDeprecation } from '../src/utils/deprecation';
 
 export interface WithReactOptions extends WithWebOptions {}
 
-/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
+// TODO(v25): remove the inert config-helper stubs in this file.
+/**
+ * @deprecated Use `NxReactWebpackPlugin` from `@nx/react/webpack-plugin`.
+ * This inert stub will be removed in Nx v25.
+ */
 export function withReact(_options: WithReactOptions = {}) {
   warnReactWithReactDeprecation();
   return (

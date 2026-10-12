@@ -28,7 +28,12 @@ export interface AsyncNxComposableRspackPlugin {
   ): Configuration | Promise<Configuration>;
 }
 
-/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
+// TODO(v25): remove the inert config-helper stubs in this file.
+/**
+ * @deprecated Use `NxAppRspackPlugin` from `@nx/rspack/app-plugin` (or `NxReactRspackPlugin`
+ * from `@nx/rspack/react-plugin`).
+ * This inert stub will be removed in Nx v25.
+ */
 export function composePlugins(
   ..._plugins: (
     | NxComposableRspackPlugin
@@ -49,7 +54,11 @@ export function composePlugins(
   );
 }
 
-/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
+/**
+ * @deprecated Use `NxAppRspackPlugin` from `@nx/rspack/app-plugin` (or `NxReactRspackPlugin`
+ * from `@nx/rspack/react-plugin`).
+ * This inert stub will be removed in Nx v25.
+ */
 export function composePluginsSync(..._plugins: NxComposableRspackPlugin[]) {
   warnRspackComposeHelpersDeprecation();
   return Object.assign(

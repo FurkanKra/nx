@@ -35,7 +35,11 @@ export interface WithWebOptions {
       ) => Record<string, any> | Promise<Record<string, any>>);
 }
 
-/** @deprecated Removed in Nx v24. This inert stub only keeps old configs loadable. */
+// TODO(v25): remove the inert config-helper stubs in this file.
+/**
+ * @deprecated Use `NxAppRspackPlugin` from `@nx/rspack/app-plugin`.
+ * This inert stub will be removed in Nx v25.
+ */
 export function withWeb(
   _options: WithWebOptions = {}
 ): NxComposableRspackPlugin {
