@@ -38,7 +38,7 @@
       }
     },
     "update-24-0-0-migrate-compose-plugins": {
-      "version": "24.0.0-beta.0",
+      "version": "24.0.0-beta.1",
       "description": "Migrate deprecated rspack configuration helpers while preserving custom behavior.",
       "prompt": "./dist/src/migrations/update-24-0-0/migrate-compose-plugins.md"
     }
