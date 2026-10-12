@@ -298,28 +298,18 @@ function buildTargetWebpack(
             ? options.tsConfig
             : join(context.root, options.tsConfig)
         );
-        // For legacy `composePlugins(...)` setup, we need change some options to make Cypress CT work properly.
+        // Unmigrated `composePlugins(...)` configs are inert, so CT uses its fallback config.
         if (
           customWebpack &&
           require('@nx/webpack').isNxWebpackComposablePlugin(customWebpack) // using inline since @nx/webpack may not be installed when using vite so top-level import would error
         ) {
-          return await customWebpack(
-            {},
-            {
-              options: {
-                ...options,
-                // cypress will generate its own index.html from component-index.html
-                generateIndexHtml: false,
-                // causes issues with buildable libraries with ENOENT: no such file or directory, scandir error
-                extractLicenses: false,
-                root: workspaceRoot,
-                projectRoot: ctProjectConfig.root,
-                sourceRoot: getProjectSourceRoot(ctProjectConfig),
-              },
-              context,
-              configuration: parsed.configuration,
-            }
-          );
+          const { buildBaseWebpackConfig } = require('./webpack-fallback');
+          return buildBaseWebpackConfig({
+            tsConfigPath: findTsConfig(
+              join(workspaceRoot, ctProjectConfig.root)
+            ),
+            compiler: options.compiler || 'babel',
+          });
         } else if (
           typeof customWebpack === 'object' ||
           typeof customWebpack === 'function'

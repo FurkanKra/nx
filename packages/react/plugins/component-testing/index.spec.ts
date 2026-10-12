@@ -139,6 +139,23 @@ describe('React Cypress webpack configuration', () => {
     ).toBeUndefined();
   });
 
+  it('uses the fallback config for an unmigrated composePlugins config', async () => {
+    writeFileSync(
+      join(directory, 'webpack.config.cjs'),
+      `
+      const { composePlugins, withNx } = require('@nx/webpack');
+      module.exports = composePlugins(withNx(), (config) => config);
+    `
+    );
+    const config = await webpackConfig(configPath)();
+    expect(config.resolve.plugins[0].absoluteBaseUrl).toBe(directory);
+    expect(config.module.rules).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ loader: require.resolve('babel-loader') }),
+      ])
+    );
+  });
+
   it('clears scoped context after a config factory rejects without changing global state', async () => {
     writeFileSync(
       join(directory, 'webpack.config.cjs'),
