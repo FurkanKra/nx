@@ -61,10 +61,46 @@ export function extractRspackOptions(tree: Tree, rspackConfigPath: string) {
       '@nx/rspack'
     );
 
+    updatedSource = inlineComposePlugins(updatedSource);
+    updatedSource = removeImportDeclarations(
+      updatedSource,
+      'composePlugins',
+      '@nx/rspack'
+    );
+
     tree.write(rspackConfigPath, updatedSource);
   }
 
   return { withNxConfig, withReactConfig };
+}
+
+// `composePlugins` is an inert stub since Nx v24, so the old config composes its
+// remaining callbacks with a local copy.
+function inlineComposePlugins(source: string): string {
+  let found = false;
+  const updatedSource = replace(
+    source,
+    'CallExpression > Identifier[name="composePlugins"]',
+    (node) => {
+      if ((node.parent as ts.CallExpression).expression !== node) {
+        return node.getText();
+      }
+      found = true;
+      return 'composeLegacyPlugins';
+    }
+  );
+  if (!found) return source;
+
+  return `${updatedSource}
+function composeLegacyPlugins(...plugins) {
+  return async (config, ctx) => {
+    for (const plugin of plugins) {
+      config = await (await plugin)(config, ctx);
+    }
+    return config;
+  };
+}
+`;
 }
 
 function removeCallExpressions(
