@@ -93,8 +93,7 @@ export async function* devServerExecutor(
           userDefinedWebpackConfig = await userDefinedWebpackConfig;
         }
 
-        // Only add the dev server option if user is composable plugin.
-        // Otherwise, user should define `devServer` option directly in their webpack config.
+        // Legacy config functions receive the dev server options as their input config.
         if (
           typeof userDefinedWebpackConfig === 'function' &&
           (isNxWebpackComposablePlugin(userDefinedWebpackConfig) ||
@@ -116,8 +115,9 @@ export async function* devServerExecutor(
           } else {
             config = userDefinedWebpackConfig;
           }
-          config.devServer ??= devServer;
         }
+        // Configs that ignore their arguments still get the target's dev server options.
+        if (config) config.devServer ??= devServer;
       }
 
       return config;
