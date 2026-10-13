@@ -1,17 +1,13 @@
 import {
   addDependenciesToPackageJson,
-  updateProjectConfiguration,
   ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
   joinPathFragments,
-  logger,
-  readProjectConfiguration,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { hasWebpackPlugin } from '@nx/react/internal';
 
 import {
   nxVersion,
@@ -78,9 +74,10 @@ export async function webConfigurationGenerator(
       {
         ...normalizedSchema,
         tmpl: '',
-        webpackPluginOptions: hasWebpackPlugin(tree)
-          ? createNxWebpackPluginOptions(tree, normalizedSchema)
-          : null,
+        webpackPluginOptions: createNxWebpackPluginOptions(
+          tree,
+          normalizedSchema
+        ),
       }
     );
   }

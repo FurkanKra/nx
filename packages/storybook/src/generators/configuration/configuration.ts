@@ -4,7 +4,6 @@ import {
   formatFiles,
   GeneratorCallback,
   logger,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -22,7 +21,6 @@ import {
   addBuildStorybookToCacheableOperations,
   addStaticTarget,
   addStorybookToNamedInputs,
-  addStorybookToTargetDefaults,
   configureTsProjectConfig,
   configureTsSolutionConfig,
   createProjectStorybookDir,
@@ -54,7 +52,7 @@ export function configurationGenerator(
   tree: Tree,
   schema: StorybookConfigureSchema
 ) {
-  return configurationGeneratorInternal(tree, { addPlugin: false, ...schema });
+  return configurationGeneratorInternal(tree, schema);
 }
 
 export async function configurationGeneratorInternal(
@@ -70,7 +68,7 @@ export async function configurationGeneratorInternal(
     );
   }
 
-  const schema = normalizeSchema(tree, rawSchema);
+  const schema = normalizeSchema(rawSchema);
 
   const tasks: GeneratorCallback[] = [];
 
@@ -113,19 +111,11 @@ export async function configurationGeneratorInternal(
   tasks.push(jsInitTask);
   const initTask = await initGenerator(tree, {
     skipFormat: true,
-    addPlugin: schema.addPlugin,
   });
   tasks.push(initTask);
   tasks.push(ensureDependencies(tree, { uiFramework: schema.uiFramework }));
 
   editRootTsConfig(tree);
-
-  const nxJson = readNxJson(tree);
-  const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/storybook/plugin'
-      : p.plugin === '@nx/storybook/plugin'
-  );
 
   const mainDir =
     !!nextConfigFilePath &&
@@ -152,7 +142,6 @@ export async function configurationGeneratorInternal(
     compiler === 'swc',
     usesVite,
     viteConfigFilePath,
-    hasPlugin,
     viteConfigFileName,
     usesReactNative
   );
@@ -173,9 +162,6 @@ export async function configurationGeneratorInternal(
 
   addBuildStorybookToCacheableOperations(tree);
   addStorybookToNamedInputs(tree, schema);
-  if (!hasPlugin) {
-    addStorybookToTargetDefaults(tree, schema);
-  }
 
   let devDeps = {};
 
@@ -247,10 +233,8 @@ export async function configurationGeneratorInternal(
 }
 
 function normalizeSchema(
-  tree: Tree,
   schema: StorybookConfigureSchema
 ): StorybookConfigureSchema {
-  const nxJson = readNxJson(tree);
   const addPlugin = true;
 
   const defaults = {
