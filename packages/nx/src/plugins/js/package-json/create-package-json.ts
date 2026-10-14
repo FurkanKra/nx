@@ -9,6 +9,7 @@ import {
 import {
   getDependencyVersionFromPackageJson,
   PackageJson,
+  readModulePackageJson,
 } from '../../../utils/package-json';
 import { existsSync } from 'fs';
 import { workspaceRoot } from '../../../utils/workspace-root';
@@ -449,7 +450,11 @@ function recursivelyCollectPeerDependencies(
 
   const packageName = npmPackage.data.packageName;
   try {
-    const packageJson = require(`${packageName}/package.json`);
+    // Not `require(`${packageName}/package.json`)`: a package whose `exports`
+    // map doesn't expose `./package.json` makes that throw, and the collection
+    // below would then be skipped. `readModulePackageJson` falls back to
+    // locating the manifest on disk.
+    const { packageJson } = readModulePackageJson(packageName);
     if (!packageJson.peerDependencies) {
       return npmDeps;
     }
@@ -476,6 +481,15 @@ function recursivelyCollectPeerDependencies(
       });
     return npmDeps;
   } catch (e) {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      output.warn({
+        title: `Could not read the package.json of "${packageName}"`,
+        bodyLines: [
+          `Its peer dependencies were left out of the generated package.json.`,
+          e instanceof Error ? e.message : String(e),
+        ],
+      });
+    }
     return npmDeps;
   }
 }

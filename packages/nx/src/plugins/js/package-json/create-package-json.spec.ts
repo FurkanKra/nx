@@ -5,15 +5,39 @@ vi.mock('fs', async () => ({
 vi.mock('../../../utils/fileutils');
 
 // Fixtures below reference `@nx/devkit` as a graph external node.
-// `recursivelyCollectPeerDependencies` then runs
-// `require('@nx/devkit/package.json')` to discover peer deps, which resolves
-// to the real `packages/devkit/package.json` via this monorepo's pnpm
-// symlinks and shows up as a sandbox-violating cross-project read. Stub it
-// with the only field this code path consumes — `peerDependencies` —
-// preserving the assertion that `nx` is collected as a transitive peer dep
-// of `@nx/devkit`.
-vi.mock('@nx/devkit/package.json', () => ({ peerDependencies: { nx: '*' } }), {
-  virtual: true,
+// `recursivelyCollectPeerDependencies` then reads its manifest to discover peer
+// deps, which resolves to the real `packages/devkit/package.json` via this
+// monorepo's pnpm symlinks and shows up as a sandbox-violating cross-project
+// read. Stub the lookup with the only field this code path consumes —
+// `peerDependencies` — preserving the assertion that `nx` is collected as a
+// transitive peer dep of `@nx/devkit`.
+//
+// `nest-style-pkg` stands in for a package whose `exports` map doesn't expose
+// `./package.json` (e.g. `@nestjs/*` 12): its manifest is unreachable through
+// `require('<pkg>/package.json')` but readable from disk.
+const { stubbedManifests } = vi.hoisted(() => ({
+  stubbedManifests: {
+    '@nx/devkit': { peerDependencies: { nx: '*' } },
+    'nest-style-pkg': { peerDependencies: { 'reflect-metadata': '*' } },
+  } as Record<string, { peerDependencies: Record<string, string> }>,
+}));
+
+vi.mock('../../../utils/package-json', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('../../../utils/package-json')>();
+  return {
+    ...actual,
+    readModulePackageJson: vi.fn((packageName: string) => {
+      const packageJson = stubbedManifests[packageName];
+      if (!packageJson) {
+        throw new Error(`Cannot find module '${packageName}/package.json'`);
+      }
+      return {
+        packageJson,
+        path: `node_modules/${packageName}/package.json`,
+      };
+    }),
+  };
 });
 
 import * as fs from 'fs';
@@ -33,6 +57,57 @@ describe('createPackageJson', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.resetAllMocks();
+  });
+
+  it('should collect peer dependencies of a package whose exports map hides ./package.json', () => {
+    vi.spyOn(fs, 'existsSync').mockReturnValue(false);
+    vi.spyOn(fileutilsModule, 'readJsonFile').mockReturnValue({});
+
+    expect(
+      createPackageJson(
+        'app1',
+        {
+          nodes: {
+            app1: {
+              type: 'app',
+              name: 'app1',
+              data: { targets: {}, root: '' },
+            },
+          },
+          externalNodes: {
+            'npm:nest-style-pkg': {
+              type: 'npm',
+              name: 'npm:nest-style-pkg',
+              data: {
+                version: '12.1.3',
+                hash: '',
+                packageName: 'nest-style-pkg',
+              },
+            },
+            'npm:reflect-metadata': {
+              type: 'npm',
+              name: 'npm:reflect-metadata',
+              data: {
+                version: '0.2.2',
+                hash: '',
+                packageName: 'reflect-metadata',
+              },
+            },
+          },
+          dependencies: {},
+        },
+        { helperDependencies: ['npm:nest-style-pkg'], root: '' }
+      )
+    ).toEqual({
+      name: 'app1',
+      version: '0.0.1',
+      dependencies: {
+        'nest-style-pkg': '12.1.3',
+      },
+      peerDependencies: {
+        'reflect-metadata': '0.2.2',
+      },
+    });
   });
 
   it('should add additional dependencies', () => {
