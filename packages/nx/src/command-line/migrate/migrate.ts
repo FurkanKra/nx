@@ -70,7 +70,7 @@ import {
   onlyDefaultRunnerIsUsed,
 } from '../nx-cloud/connect/connect-to-nx-cloud';
 import { output } from '../../utils/output';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, realpathSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { isCI } from '../../utils/is-ci';
 import {
@@ -1817,6 +1817,46 @@ function resolveInstalledCanonical(): {
   return null;
 }
 
+/**
+ * Whether a resolved package manifest is the workspace's own copy.
+ *
+ * `require.resolve` returns the real path, so an install that links
+ * `node_modules` entries to a store outside the workspace - pnpm's
+ * `enableGlobalVirtualStore`, or a linked package - lands outside
+ * `workspaceRoot` even though it is what the workspace has installed. Such a
+ * package counts as installed when the workspace reaches the same manifest
+ * through its own `node_modules`, while a temp installation of Nx, which the
+ * workspace does not link to, still does not.
+ */
+export function isWorkspacePackageManifest(
+  manifestPath: string,
+  packageName: string,
+  root: string
+): boolean {
+  if (manifestPath.startsWith(workspaceRoot)) {
+    return true;
+  }
+
+  let realManifestPath: string;
+  try {
+    realManifestPath = realpathSync(manifestPath);
+  } catch {
+    return false;
+  }
+
+  return getNxRequirePaths(root).some((requirePath) => {
+    try {
+      return (
+        realpathSync(
+          join(requirePath, 'node_modules', packageName, 'package.json')
+        ) === realManifestPath
+      );
+    } catch {
+      return false;
+    }
+  });
+}
+
 function createInstalledPackageVersionsResolver(
   root: string
 ): MigratorOptions['getInstalledPackageVersion'] {
@@ -1840,7 +1880,7 @@ function createInstalledPackageVersionsResolver(
           for (const req of nxRequires) {
             try {
               const packageJsonPath = req.resolve('nx/package.json');
-              if (packageJsonPath.startsWith(workspaceRoot)) {
+              if (isWorkspacePackageManifest(packageJsonPath, 'nx', root)) {
                 return readJsonFile<PackageJson>(packageJsonPath).version;
               }
             } catch {}
@@ -1864,7 +1904,7 @@ function createInstalledPackageVersionsResolver(
         );
         // old workspaces would have the temp installation of nx in the cache,
         // so the resolved package is not the one we need
-        if (!path.startsWith(workspaceRoot)) {
+        if (!isWorkspacePackageManifest(path, packageName, root)) {
           throw new Error('Resolved a package outside the workspace root.');
         }
         cache[packageName] = packageJson.version;
